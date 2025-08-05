@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import LogoutPage from './pages/LogoutPage';
+import CSPTestPage from './pages/CSPTestPage'; // Added CSP test page
 
 // Components
 import Layout from './components/Layout';
@@ -67,6 +68,11 @@ function App() {
           <Route 
             path="/logout" 
             element={<LogoutPage onLogout={logout} />} 
+          />
+          {/* CSP Test Route - Available for security testing */}
+          <Route 
+            path="/csp-test" 
+            element={<CSPTestPage />} 
           />
         </Routes>
       </Layout>
