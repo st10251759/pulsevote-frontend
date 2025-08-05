@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { validateRegistrationForm } from '../utils/validation';
 import './Pages.css';
 
 const RegisterPage = () => {
@@ -37,18 +38,9 @@ const RegisterPage = () => {
     setError('');
 
     // Client-side validation
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('All fields are required');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    const validationErrors = validateRegistrationForm(formData);
+    if (validationErrors.length > 0) {
+      setError(validationErrors[0]); // Show first error
       return;
     }
 
@@ -56,8 +48,13 @@ const RegisterPage = () => {
 
     try {
       const response = await axios.post('https://localhost:5000/api/auth/register', {
-        email: formData.email,
+        email: formData.email.toLowerCase().trim(),
         password: formData.password
+      }, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       // Store the token
@@ -66,7 +63,22 @@ const RegisterPage = () => {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timeout. Please try again.');
+      } else if (err.response?.status === 400) {
+        // Handle validation errors from backend
+        if (err.response.data.errors) {
+          setError(err.response.data.errors[0].msg);
+        } else {
+          setError(err.response.data.message || 'Registration failed');
+        }
+      } else if (err.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -104,6 +116,8 @@ const RegisterPage = () => {
                 placeholder="Enter your email address"
                 required
                 disabled={isLoading}
+                autoComplete="email"
+                maxLength="254"
               />
             </div>
           </div>
@@ -124,7 +138,8 @@ const RegisterPage = () => {
                 placeholder="Create a strong password"
                 required
                 disabled={isLoading}
-                minLength={6}
+                autoComplete="new-password"
+                minLength={8}
               />
               <button
                 type="button"
@@ -136,6 +151,9 @@ const RegisterPage = () => {
                 <i className={showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
               </button>
             </div>
+            <small className="password-hint">
+              Password must be at least 8 characters with letters, numbers, and special characters
+            </small>
           </div>
 
           <div className="form-group">
@@ -154,7 +172,8 @@ const RegisterPage = () => {
                 placeholder="Confirm your password"
                 required
                 disabled={isLoading}
-                minLength={6}
+                autoComplete="new-password"
+                minLength={8}
               />
               <button
                 type="button"

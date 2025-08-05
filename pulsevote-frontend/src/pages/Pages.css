@@ -1,5 +1,12 @@
 /* Dashboard Page Styles - Add these to your Pages.css */
 
+.password-hint {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .dashboard-page {
   min-height: calc(100vh - 200px);
   background: #f8fafc;
